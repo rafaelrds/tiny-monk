@@ -16,7 +16,7 @@ def get_GeoLiteBlockLine(index):
 
 def get_GeoLiteBlockId(item):
 	first = 1
-	last = 2019668
+	last = 2019668 ### counted using wc -> should change
 	found = False
 
 	while first<=last and not found:
@@ -41,12 +41,19 @@ def get_GeoLiteBlockLocation(ip_addr):
 
 # f = open('ufcg_dns.txt', 'r+')
 from subprocess import Popen, PIPE
-my_domain = "www.ufcg.com.br"
+my_domain = "www.detik.com"
+# my_domain = 'www.unesco.com.br'
 p = Popen(['dig', '+trace', my_domain], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+# print output
 rc = p.returncode
 
 my_ips = parse_dig(output)
 for ip in my_ips:	
-	print ip, " ".join(get_GeoLiteBlockLocation(ip))
+	print ip, get_GeoLiteBlockLocation(ip)
+# print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
+'''Return a list of n random ips'''
+def random_ips(n):
+	import random
+	return ["%s.%s.%s.%s" % (random.randint(1,255), random.randint(1,255), random.randint(1,255), random.randint(1,255)) for i in xrange(n)]
