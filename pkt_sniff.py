@@ -10,7 +10,7 @@ class DNS_pair_stamped(object):
     self.time_r = time_r
     self.pkt_r = pkt_r
 
-  def diff_times_in_seconds(self):
+  def diff_time_in_seconds(self):
     # caveat emptor - assumes t1 & t2 are python times, on the same day and t2 is after t1
     t1 = datetime.datetime.strptime(self.time_q, '%H:%M:%S.%f').time()
     t2 = datetime.datetime.strptime(self.time_r, '%H:%M:%S.%f').time()
@@ -20,14 +20,16 @@ class DNS_pair_stamped(object):
     t2_secs = s2 + 60 * (m2 + 60*h2)
     t1_msecs = (t1_secs * int(1e6)) + mm1
     t2_msecs = (t2_secs * int(1e6)) + mm2
-    return (t2_msecs - t1_msecs)/1000.0
+    delta = t2_msecs - t1_msecs
+    return (delta)/1000.0 if delta > 0 else (24*60*60*int(1e6) + delta)/1000.0
+
 
   def description(self):
     print 35*"*"
     print "DNS Id =", self.pkt_q[DNS].id
     print "Query time", self.time_q
     print "Answer time", self.time_r
-    print "Response time", self.diff_times_in_seconds(),"ms"
+    print "Response time", self.diff_time_in_seconds(),"ms"
     print 35*"*"
 
 
