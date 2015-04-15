@@ -20,7 +20,7 @@ class DNS_pair_stamped(object):
     t2_secs = s2 + 60 * (m2 + 60*h2)
     t1_msecs = (t1_secs * int(1e6)) + mm1
     t2_msecs = (t2_secs * int(1e6)) + mm2
-    return (t2_msecs - t1_msecs)/1000
+    return (t2_msecs - t1_msecs)/1000.0
 
   def description(self):
     print 35*"*"
