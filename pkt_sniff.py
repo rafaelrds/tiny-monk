@@ -1,20 +1,34 @@
 #!/usr/bin/env python
 from scapy.all import *
-from datetime import datetime
+import datetime
 
 # TODO
 class DNS_pair_stamped(object):
-  def __init__(self, time_q, pkt_q, time_a, pkt_a):
+  def __init__(self, time_q, pkt_q, time_r, pkt_r):
     self.time_q = time_q
     self.pkt_q = pkt_q
-    self.time_a = time_a
-    self.pkt_a = pkt_a
+    self.time_r = time_r
+    self.pkt_r = pkt_r
 
+  def diff_times_in_seconds(self):
+    # caveat emptor - assumes t1 & t2 are python times, on the same day and t2 is after t1
+    t1 = datetime.datetime.strptime(self.time_q, '%H:%M:%S.%f').time()
+    t2 = datetime.datetime.strptime(self.time_r, '%H:%M:%S.%f').time()
+    h1, m1, s1, mm1 = t1.hour, t1.minute, t1.second, t1.microsecond
+    h2, m2, s2, mm2 = t2.hour, t2.minute, t2.second, t2.microsecond
+    t1_secs = s1 + 60 * (m1 + 60*h1)
+    t2_secs = s2 + 60 * (m2 + 60*h2)
+    t1_msecs = (t1_secs * int(1e6)) + mm1
+    t2_msecs = (t2_secs * int(1e6)) + mm2
+    return (t2_msecs - t1_msecs)/1000
 
   def description(self):
+    print 35*"*"
     print "DNS Id =", self.pkt_q[DNS].id
     print "Query time", self.time_q
-    print "Answer time", self.time_a 
+    print "Answer time", self.time_r
+    print "Response time", self.diff_times_in_seconds(),"ms"
+    print 35*"*"
 
 
 interface = 'en0'
