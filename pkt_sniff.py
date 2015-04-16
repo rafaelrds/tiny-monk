@@ -2,7 +2,7 @@
 from scapy.all import *
 import datetime
 
-# TODO
+
 class DNS_pair_stamped(object):
   def __init__(self, time_q, pkt_q, time_r, pkt_r):
     self.time_q = time_q
@@ -23,13 +23,14 @@ class DNS_pair_stamped(object):
     return (delta)/1000.0 if delta > 0 else (24*60*60*int(1e6) + delta)/1000.0
 
 
-  def description(self):
+  def __repr__(self):
     print 35*"*"
-    print "DNS Id =", self.pkt_q[DNS].id
-    print "Query time", self.time_q
-    print "Answer time", self.time_r
+    print "Transaction ID:", self.pkt_q[DNS].id
+    print "Query:", self.time_q, self.pkt_q[DNS].qd.qname
+    print "Response:", self.time_r
     print "Response time", self.diff_time_in_seconds(),"ms"
     print 35*"*"
+    return ""
 
 
 interface = 'en0'
@@ -43,7 +44,8 @@ DNS_PAIRS = []
 def select_DNS(pkt):
   global DNS_DICT, packetCount
   pkt_time = pkt.sprintf('%.time%')
-# ------ SELECT/FILTER DNS MSGS
+  packetCount += 1
+
   try:
     if DNSQR in pkt and pkt.dport == 53:
       # queries
@@ -66,13 +68,16 @@ def select_DNS(pkt):
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
 
-    packetCount += 1
   except:
     print "An exception was throwed!"
   
 # ------ START SNIFFER 
 sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, count=10)
+
+# ------ ANALYSIS
 for p in DNS_PAIRS:
-  p.description()
+  print p
+
+print "Total of %d packets" % (packetCount)
 
 
