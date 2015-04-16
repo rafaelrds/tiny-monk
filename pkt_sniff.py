@@ -11,7 +11,6 @@ class DNS_pair_stamped(object):
     self.pkt_r = pkt_r
 
   def diff_time_in_seconds(self):
-    # caveat emptor - assumes t1 & t2 are python times, on the same day and t2 is after t1
     t1 = datetime.datetime.strptime(self.time_q, '%H:%M:%S.%f').time()
     t2 = datetime.datetime.strptime(self.time_r, '%H:%M:%S.%f').time()
     h1, m1, s1, mm1 = t1.hour, t1.minute, t1.second, t1.microsecond
