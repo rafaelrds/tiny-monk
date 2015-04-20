@@ -38,19 +38,26 @@ def get_GeoLiteBlockLocation(ip_addr):
 	id_location = get_GeoLiteBlockId(ip2int(ip_addr))[2]
 	return linecache.getline('GeoLite/GeoLiteCity-Location.csv', id_location + HEADER_SIZE).split(",")
 
+def dig(site="www.google.co.uk"):
+	from subprocess import Popen, PIPE
+	p = Popen(['dig', '+trace', site], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+	output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+	b = output.strip().split('\n')
+	for i in range(len(b)):
+		line = b[i].split()
+		if len(line) > 0 and (line[1] == 'Received'):
+			s = line[5]
+			print line[1], line[2], line[3], line[4], s[s.find('(')+1 : s.find(')')], line[6], line[7], line[8]
+	for i in range(len(b)):
+		line = b[i].split()
+		if len(line) > 0 and (line[0] not in ';;'):
+			if line [0] == '.': line[0] = 'root'
+			print "Server:%-15s address:%-10s" % (line[0], line[4])
 
-# f = open('ufcg_dns.txt', 'r+')
-from subprocess import Popen, PIPE
-my_domain = "www.detik.com"
-# my_domain = 'www.unesco.com.br'
-p = Popen(['dig', '+trace', my_domain], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-output, err = p.communicate(b"input data that is passed to subprocess' stdin")
-# print output
-rc = p.returncode
-
-my_ips = parse_dig(output)
-for ip in my_ips:	
-	print ip, get_GeoLiteBlockLocation(ip)
+dig()
+# my_ips = parse_dig(output)
+# for ip in my_ips:	
+# 	print ip, get_GeoLiteBlockLocation(ip)
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
 '''Return a list of n random ips'''

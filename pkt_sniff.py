@@ -2,6 +2,8 @@
 from scapy.all import *
 import datetime
 
+def extract_records():
+  pass
 
 class DNS_pair_stamped(object):
   def __init__(self, time_q, pkt_q, time_r, pkt_r):
@@ -10,7 +12,7 @@ class DNS_pair_stamped(object):
     self.time_r = time_r
     self.pkt_r = pkt_r
 
-  def diff_time_in_seconds(self):
+  def diff_time_in_miliseconds(self):
     t1 = datetime.datetime.strptime(self.time_q, '%H:%M:%S.%f').time()
     t2 = datetime.datetime.strptime(self.time_r, '%H:%M:%S.%f').time()
     h1, m1, s1, mm1 = t1.hour, t1.minute, t1.second, t1.microsecond
@@ -28,7 +30,7 @@ class DNS_pair_stamped(object):
     print "Transaction ID:", self.pkt_q[DNS].id
     print "Query:", self.time_q, self.pkt_q[DNS].qd.qname
     print "Response:", self.time_r
-    print "Response time", self.diff_time_in_seconds(),"ms"
+    print "Response time", self.diff_time_in_miliseconds(),"ms"
     print 35*"*"
     return ""
 
@@ -72,12 +74,17 @@ def select_DNS(pkt):
     print "An exception was throwed!"
   
 # ------ START SNIFFER 
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, count=10)
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=10)
 
 # ------ ANALYSIS
+total_time = 0
 for p in DNS_PAIRS:
   print p
+  total_time += p.diff_time_in_miliseconds()
+
 
 print "Total of %d packets" % (packetCount)
-
+print "Sum of QR time %fms" % (total_time)
+print "Average of response time %fms" % (total_time/(packetCount/2.0))
+ 
 
