@@ -8,6 +8,14 @@ def int2ip(addr):
 def parse_dig(text):
 	return [c[1] for c in [b.split('(') for b in text.split(')')] if len(c) > 1]
 
+# http://stackoverflow.com/questions/2311510/getting-a-machines-external-ip-address
+def get_external_ip(site="http://www.checkip.com"):
+	import urllib, re
+	content = urllib.urlopen(site).read()
+	grab = re.findall('([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', content)
+	address = grab[0]
+	return address
+
 '''Use starting with index 1, until 2019668, that is the last line'''
 def get_GeoLiteBlockLine(index):
 	import linecache
@@ -52,15 +60,12 @@ def dig(site="www.google.co.uk"):
 		line = b[i].split()
 		if len(line) > 0 and (line[0] not in ';;'):
 			if line [0] == '.': line[0] = 'root'
-			print "Server:%-15s address:%-10s" % (line[0], line[4])
+			print "Server:%-20s Type:%-15s address:%-10s" % (line[0], line[3], line[4])
 
-dig()
+# dig(site="www.facebook.com")
 # my_ips = parse_dig(output)
 # for ip in my_ips:	
 # 	print ip, get_GeoLiteBlockLocation(ip)
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
-'''Return a list of n random ips'''
-def random_ips(n):
-	import random
-	return ["%s.%s.%s.%s" % (random.randint(1,255), random.randint(1,255), random.randint(1,255), random.randint(1,255)) for i in xrange(n)]
+my_external_ip = get_external_ip()
