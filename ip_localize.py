@@ -40,6 +40,10 @@ def get_GeoLiteBlockId(item):
 		# print "DEBBUG",get_GeoLiteBlockLine(midpoint),midpoint
 	return -1
 
+''' 
+	Return array content:
+	[locId, country, region, city, postalCode, latitude, longitude, metroCode, areaCode]
+'''
 def get_GeoLiteBlockLocation(ip_addr):
 	import linecache
 	HEADER_SIZE = 1
@@ -69,3 +73,5 @@ def dig(site="www.google.co.uk"):
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
 my_external_ip = get_external_ip()
+print my_external_ip, ip2int(my_external_ip), get_GeoLiteBlockId(ip2int(my_external_ip))
+print get_GeoLiteBlockLocation(my_external_ip)
