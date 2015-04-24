@@ -2,19 +2,9 @@
 from scapy.all import *
 import datetime
 
-def extract_records():
-  pass
-
-class DNS_pair_stamped(object):
-  def __init__(self, time_q, pkt_q, time_r, pkt_r):
-    self.time_q = time_q
-    self.pkt_q = pkt_q
-    self.time_r = time_r
-    self.pkt_r = pkt_r
-
-  def diff_time_in_miliseconds(self):
-    t1 = datetime.datetime.strptime(self.time_q, '%H:%M:%S.%f').time()
-    t2 = datetime.datetime.strptime(self.time_r, '%H:%M:%S.%f').time()
+def diff_time_in_miliseconds(t1, t2):
+    t1 = datetime.datetime.strptime(t1, '%H:%M:%S.%f').time()
+    t2 = datetime.datetime.strptime(t2, '%H:%M:%S.%f').time()
     h1, m1, s1, mm1 = t1.hour, t1.minute, t1.second, t1.microsecond
     h2, m2, s2, mm2 = t2.hour, t2.minute, t2.second, t2.microsecond
     t1_secs = s1 + 60 * (m1 + 60*h1)
@@ -24,17 +14,43 @@ class DNS_pair_stamped(object):
     delta = t2_msecs - t1_msecs
     return (delta)/1000.0 if delta > 0 else (24*60*60*int(1e6) + delta)/1000.0
 
+def max_response_time(list_of_dnspairs):
+  max_rtime = 0.0
+  for pair in list_of_dnspairs:
+    max_rtime = max(max_rtime, diff_time_in_miliseconds(pair.time_q, pair.time_r))
+  return max_rtime
+
+def min_response_time(list_of_dnspairs):
+  min_rtime = 1e6
+  for pair in list_of_dnspairs:
+    min_rtime = min(min_rtime, diff_time_in_miliseconds(pair.time_q, pair.time_r))
+  return min_rtime
+
+def calculate_total_dnsload(list_of_dnspairs):
+  first_pair = list_of_dnspairs[0]
+  total_time = 0
+  for pair in list_of_dnspairs:
+    total_time = max(total_time, diff_time_in_miliseconds(first_pair.time_q, pair.time_r))
+  return total_time
+
+class DNS_pair_stamped(object):
+  def __init__(self, time_q, pkt_q, time_r, pkt_r):
+    self.time_q = time_q
+    self.pkt_q = pkt_q
+    self.time_r = time_r
+    self.pkt_r = pkt_r
 
   def __repr__(self):
     print 35*"*"
     print "Transaction ID:", self.pkt_q[DNS].id
     print "Query:", self.time_q, self.pkt_q[DNS].qd.qname
     print "Response:", self.time_r
-    print "Response time", self.diff_time_in_miliseconds(),"ms"
+    print "Response time", diff_time_in_miliseconds(self.time_q, self.time_r),"ms"
     print 35*"*"
     return ""
 
 
+# ------ GLOBAL VARIABLES ------
 interface = 'en0'
 filter_bpf = 'udp and port 53'
 
@@ -42,7 +58,7 @@ packetCount = 0
 DNS_DICT = {}
 DNS_PAIRS = []
 
-# ------ SELECT/FILTER MSGS
+# ------ SELECT/FILTER MSGS ------
 def select_DNS(pkt):
   global DNS_DICT, packetCount
   pkt_time = pkt.sprintf('%.time%')
@@ -60,7 +76,6 @@ def select_DNS(pkt):
     elif DNSRR in pkt and pkt.sport == 53:
       # responses
       dns_id = pkt[DNS].id
-      srv_ip = pkt[IP].src
       response = pkt[DNSRR].rdata
 
       previous_pkt_time = DNS_DICT[dns_id][0]
@@ -73,18 +88,22 @@ def select_DNS(pkt):
   except:
     print "An exception was throwed!"
   
-# ------ START SNIFFER 
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=10)
+# ------ START SNIFFER ------
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=50)
 
-# ------ ANALYSIS
+# ------ ANALYSIS ------
 total_time = 0
 for p in DNS_PAIRS:
   print p
-  total_time += p.diff_time_in_miliseconds()
+  total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
 
 
 print "Total of %d packets" % (packetCount)
-print "Sum of QR time %fms" % (total_time)
-print "Average of response time %fms" % (total_time/(packetCount/2.0))
+print "Total of %d pairs" % (len(DNS_PAIRS))
+print "Maximum response time %.3fms" % (max_response_time(DNS_PAIRS))
+print "Minimum response time %.3fms" % (min_response_time(DNS_PAIRS))
+print "Time between first Q and last R %.3fms" % (calculate_total_dnsload(DNS_PAIRS))
+print "Sum of QR time %.3fms" % (total_time)
+print "Average of response time %.6fms" % (total_time/(packetCount/2.0))
  
 
