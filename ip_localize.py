@@ -48,9 +48,23 @@ def get_GeoLiteBlockLocation(ip_addr):
 	import linecache
 	HEADER_SIZE = 1
 	id_location = get_GeoLiteBlockId(ip2int(ip_addr))[2]
-	return linecache.getline('GeoLite/GeoLiteCity-Location.csv', id_location + HEADER_SIZE).split(",")
+	return linecache.getline('GeoLite/GeoLiteCity-Location.csv', id_location + HEADER_SIZE).strip().split(",")
 
-def dig(site="www.google.co.uk"):
+'''
+	Return correspondent host name
+	by using host UNIX service.
+'''
+def host(ip="8.8.8.8"):
+	from subprocess import Popen, PIPE
+	p = Popen(['host', ip], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+	output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+	return output.rstrip().split()[-1]
+
+''''
+	Return array:
+	[(bytes, ip, time), ... ] 
+'''
+def dig(site="www.example.com"):
 	from subprocess import Popen, PIPE
 	p = Popen(['dig', '+trace', site], stdin=PIPE, stdout=PIPE, stderr=PIPE)
 	output, err = p.communicate(b"input data that is passed to subprocess' stdin")
@@ -59,11 +73,13 @@ def dig(site="www.google.co.uk"):
 		line = b[i].split()
 		if len(line) > 0 and (line[1] == 'Received'):
 			s = line[5]
-			print line[1], line[2], line[3], line[4], s[s.find('(')+1 : s.find(')')], line[6], line[7], line[8]
+			ip_address = s[s.find('(')+1 : s.find(')')]
+			n_bytes = line[2]
+			response_time = line[7]
+			print (n_bytes, response_time, ip_address, host(ip_address), get_GeoLiteBlockLocation(ip_address))
 	for i in range(len(b)):
 		line = b[i].split()
 		if len(line) > 0 and (line[0] not in ';;'):
-			if line [0] == '.': line[0] = 'root'
 			print "Server:%-20s Type:%-15s address:%-10s" % (line[0], line[3], line[4])
 
 # dig(site="www.facebook.com")
@@ -73,5 +89,7 @@ def dig(site="www.google.co.uk"):
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
 my_external_ip = get_external_ip()
-print my_external_ip, ip2int(my_external_ip), get_GeoLiteBlockId(ip2int(my_external_ip))
+print my_external_ip
 print get_GeoLiteBlockLocation(my_external_ip)
+site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
+print dig(site=site)
