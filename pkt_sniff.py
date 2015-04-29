@@ -28,10 +28,8 @@ def min_response_time(list_of_dnspairs):
 
 def calculate_total_dnsload(list_of_dnspairs):
   first_pair = list_of_dnspairs[0]
-  total_time = 0
-  for pair in list_of_dnspairs:
-    total_time = max(total_time, diff_time_in_miliseconds(first_pair.time_q, pair.time_r))
-  return total_time
+  last_pair = list_of_dnspairs[-1]
+  return diff_time_in_miliseconds(first_pair.time_q, last_pair.time_r)
 
 class DNS_pair_stamped(object):
   def __init__(self, time_q, pkt_q, time_r, pkt_r):
@@ -41,12 +39,12 @@ class DNS_pair_stamped(object):
     self.pkt_r = pkt_r
 
   def __repr__(self):
-    print 35*"*"
+    print 50*"*"
     print "Transaction ID:", self.pkt_q[DNS].id
     print "Query:", self.time_q, self.pkt_q[DNS].qd.qname
     print "Response:", self.time_r
     print "Response time", diff_time_in_miliseconds(self.time_q, self.time_r),"ms"
-    print 35*"*"
+    print 50*"*"
     return ""
 
 
@@ -84,17 +82,30 @@ def select_DNS(pkt):
 
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
+      print 'a'
+      print dns_pair_stamped
+      print 'b'
 
   except:
     print "An exception was throwed!"
   
 # ------ START SNIFFER ------
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=50)
+import webbrowser
+url = 'http://www.utwente.nl/'
+
+# Open URL in a new tab, if a browser window is already open.
+# webbrowser.get('firefox').open_new_tab('http://www.google.com')
+# webbrowser.open_new_tab(url + 'onderwijs/')
+
+# Open URL in new window, raising the window if possible.
+# webbrowser.open_new(url)
+
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=60)
 
 # ------ ANALYSIS ------
 total_time = 0
 for p in DNS_PAIRS:
-  print p
+  # print p
   total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
 
 
