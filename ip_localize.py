@@ -51,7 +51,8 @@ def get_IPASLine(index, my_file = 'GeoLite/GeoIPASNum2.csv'):
 	return map(int, file_line[0:2]) + [file_line[2].strip()[1:-1]] if len(file_line) > 1 else None
 
 
-def get_IPAS(item):
+def get_IPAS(ip_addr):
+	item = ip2int(ip_addr)
 	first = 1
 	last = 224846 ### counted using wc -> should change
 	found = False
@@ -121,7 +122,7 @@ def dig(site="www.example.com"):
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
 my_external_ip = get_external_ip()
-print my_external_ip, ip2int(my_external_ip), get_IPAS(ip2int(my_external_ip))
+print my_external_ip, get_IPAS(my_external_ip)
 # print get_GeoLiteBlockLocation(my_external_ip)
 # site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
 # site = "plus.google.com"
