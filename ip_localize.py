@@ -17,10 +17,12 @@ def get_external_ip(site="http://www.checkip.com"):
 	return address
 
 '''Use starting with index 1, until 2019668, that is the last line'''
-def get_GeoLiteBlockLine(index):
+def get_GeoLiteBlockLine(index, my_file = 'GeoLite/GeoLiteCity-Blocks.csv'):
 	import linecache
 	HEADER_SIZE = 1
-	return map(lambda x : int(x.strip()[1:-1]), linecache.getline('GeoLite/GeoLiteCity-Blocks.csv', index + HEADER_SIZE).split(","))
+	file_line = linecache.getline(my_file, index + HEADER_SIZE).split(",")
+	return map(lambda x : int(x.strip()[1:-1]), file_line)
+
 
 def get_GeoLiteBlockId(item):
 	first = 1
@@ -29,16 +31,45 @@ def get_GeoLiteBlockId(item):
 
 	while first<=last and not found:
 		midpoint = (first + last)//2
-		if get_GeoLiteBlockLine(midpoint)[0] <= item and item <= get_GeoLiteBlockLine(midpoint)[1]:
-			return get_GeoLiteBlockLine(midpoint)
+		mid_el = get_GeoLiteBlockLine(midpoint)
+
+		if mid_el[0] <= item and item <= mid_el[1]:
+			return mid_el
 			found = True
 		else:
-			if item < get_GeoLiteBlockLine(midpoint)[0]:
+			if item < mid_el[0]:
 				last = midpoint-1
 			else:
 				first = midpoint+1
-		# print "DEBBUG",get_GeoLiteBlockLine(midpoint),midpoint
 	return -1
+
+
+def get_IPASLine(index, my_file = 'GeoLite/GeoIPASNum2.csv'):
+	import linecache
+	HEADER_SIZE = 0
+	file_line = linecache.getline(my_file, index + HEADER_SIZE).split(",")
+	return map(int, file_line[0:2]) + [file_line[2].strip()[1:-1]] if len(file_line) > 1 else None
+
+
+def get_IPAS(item):
+	first = 1
+	last = 224846 ### counted using wc -> should change
+	found = False
+
+	while first<=last and not found:
+		midpoint = (first + last)//2
+		mid_el = get_IPASLine(midpoint)
+
+		if mid_el[0] <= item and item <= mid_el[1]:
+			return mid_el[2]
+			found = True
+		else:
+			if item < mid_el[0]:
+				last = midpoint-1
+			else:
+				first = midpoint+1
+	return -1
+
 
 ''' 
 	Return array content:
@@ -62,7 +93,8 @@ def host(ip="8.8.8.8"):
 
 ''''
 	Return array:
-	[(bytes, ip, time), ... ] 
+	[(bytes, time, ip, NS, [location_array], ... ] 
+	[location_array] = [locId, country, region, city, postalCode, latitude, longitude, metroCode, areaCode]
 '''
 def dig(site="www.example.com"):
 	from subprocess import Popen, PIPE
@@ -89,7 +121,11 @@ def dig(site="www.example.com"):
 # print "130.89.93.44", get_GeoLiteBlockLocation("130.89.93.44")
 
 my_external_ip = get_external_ip()
-print my_external_ip
-print get_GeoLiteBlockLocation(my_external_ip)
-site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
-print dig(site=site)
+print my_external_ip, ip2int(my_external_ip), get_IPAS(ip2int(my_external_ip))
+# print get_GeoLiteBlockLocation(my_external_ip)
+# site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
+# site = "plus.google.com"
+# print dig(site=site)
+# my_ips = ["54.76.117.96", "54.76.116.11", "200.215.195.1"]
+# for ip in my_ips:
+# 	print get_GeoLiteBlockLocation(ip)
