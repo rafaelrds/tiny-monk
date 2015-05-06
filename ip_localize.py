@@ -1,3 +1,7 @@
+''' TODO: EXTRACT A BINARY SEARCH METHOD AND USE IT TO SEARCH IN FILES '''
+
+
+
 '''
 Convert String IP to Integer according the below formula:
 (first octet * 256^3) + (second octet * 256^2) + (third octet * 256) + (fourth octet)
@@ -28,9 +32,9 @@ Retrieves line in the GeoLiteCity-Blocks.csv according to index
 '''
 def get_GeoLiteBlockLine(index, my_file = 'GeoLite/GeoLiteCity-Blocks.csv'):
 	import linecache
-	HEADER_SIZE = 1
+	HEADER_SIZE = 2
 	file_line = linecache.getline(my_file, index + HEADER_SIZE).split(",")
-	return map(lambda x : int(x.strip()[1:-1]), file_line) if len(file_line) > 1 else None
+	return map(lambda x : int(x.strip()[1:-1]), file_line) if len(file_line) > 1 else []
 
 '''
 Binary Searches what is the ID of the parameter IP Address (Integer)
@@ -39,13 +43,12 @@ consulting the GeoLiteCity-Blocks.csv file.
 '''
 def get_GeoLiteBlockId(item):
 	first = 1
-	last = 2019668 ### counted using wc -> should change
+	last = 2018010 - 2### counted using wc -> should change
 	found = False
 
-	while first<=last and not found:
+	while first <= last and not found:
 		midpoint = (first + last)//2
 		mid_el = get_GeoLiteBlockLine(midpoint)
-
 		if mid_el[0] <= item and item <= mid_el[1]:
 			return mid_el
 			found = True
@@ -62,9 +65,12 @@ Retrieves the location of an IP Address (String) in an array format.
 '''
 def get_GeoLiteLocation(ip_addr):
 	import linecache
-	HEADER_SIZE = 1
-	id_location = get_GeoLiteBlockId(ip2int(ip_addr))[2]
-	return linecache.getline('GeoLite/GeoLiteCity-Location.csv', id_location + HEADER_SIZE).strip().split(",")
+	HEADER_SIZE = 2
+	id_location = get_GeoLiteBlockId(ip2int(ip_addr))
+	if id_location != -1:
+		location_line = linecache.getline('GeoLite/GeoLiteCity-Location.csv', id_location[2] + HEADER_SIZE)
+		return location_line.strip().split(",") if len(id_location) > 1 else []
+	return -1
 
 '''
 Retrieves line in the GeoIPASNum2.csv according to index
@@ -83,16 +89,13 @@ consulting the GeoIPASNum2.csv file.
 def get_IPAS(ip_addr):
 	item = ip2int(ip_addr)
 	first = 1
-	last = 224846 ### counted using wc -> should change
-	found = False
+	last = 225024 ### counted using wc -> should change
 
-	while first<=last and not found:
+	while first<=last:
 		midpoint = (first + last)//2
 		mid_el = get_LineIPAS(midpoint)
-
 		if mid_el[0] <= item and item <= mid_el[1]:
 			return mid_el[2]
-			found = True
 		else:
 			if item < mid_el[0]:
 				last = midpoint-1
@@ -135,22 +138,18 @@ def dig(site="www.example.com"):
 
 
 #Method testing/execution area:
+for i in xrange(256):
+	print str(i)+".x.x.x"
+	for j in xrange(256):
+		for k in xrange(256):
+			for l in xrange(256):
+				ip = "%d.%d.%d.%d" % (i, j, k, l)
+				get_IPAS(ip)
 
-# dig(site="www.facebook.com")
-# my_ips = parse_dig(output)
-# for ip in my_ips:	
-# 	print ip, get_GeoLiteLocation(ip)
-# print "130.89.93.44", get_GeoLiteLocation("130.89.93.44")
-
-my_external_ip = get_external_ip()
-print my_external_ip
-# print my_external_ip
-# print dig(site="www.google.uk")
-# print get_GeoLiteLocation(my_external_ip), get_IPAS(my_external_ip)
-site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
-traces = dig(site=site)
-for t in traces:
-	print t
+# site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
+# traces = dig(site=site)
+# for t in traces:
+	# print t
 # my_ips = ["54.76.117.96", "54.76.116.11", "200.215.195.1"]
 # for ip in my_ips:
 # 	print get_GeoLiteLocation(ip)
