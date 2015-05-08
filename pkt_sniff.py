@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from scapy.all import *
-import datetime
+import datetime, sys
 
 def diff_time_in_miliseconds(t1, t2):
   t1 = datetime.datetime.strptime(t1, '%H:%M:%S.%f').time()
@@ -31,6 +31,20 @@ def calculate_total_dnsload(list_of_dnspairs):
   last_pair = list_of_dnspairs[-1]
   return diff_time_in_miliseconds(first_pair.time_q, last_pair.time_r)
 
+def clear_dnsrecords():
+  import psutil
+  for proc in psutil.process_iter():
+    if 'mDNSResponder' == proc.name():
+      proc.kill()
+  print "MATOU"
+
+def close_firefox():
+  import psutil
+  for proc in psutil.process_iter():
+    if 'firefox' == proc.name():
+      proc.kill()
+  return True 
+
 class DNS_pair_stamped(object):
   def __init__(self, time_q, pkt_q, time_r, pkt_r):
     self.time_q = time_q
@@ -57,11 +71,15 @@ packetCount = 0
 DNS_DICT = {}
 DNS_PAIRS = []
 
+
 # ------ SELECT/FILTER MSGS ------
 def select_DNS(pkt):
   global DNS_DICT, packetCount
   pkt_time = pkt.sprintf('%.time%')
   packetCount += 1
+  if packetCount % 5 == 0:
+    print packetCount, 
+  sys.stdout.flush()
 
   try:
     if DNSQR in pkt and pkt.dport == 53:
@@ -83,7 +101,7 @@ def select_DNS(pkt):
 
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
-      print dns_pair_stamped
+      # print dns_pair_stamped # TO PRINT OR NOT TO PRINT!!!!!
 
   except:
     print "An exception was throwed!"
@@ -98,13 +116,19 @@ webbrowser.get('firefox').open(url)
 # Open URL in new window, raising the window if possible.
 # webbrowser.open_new(url)
 import platform
+import psutil
+
 plat = platform.platform().lower()
 if 'darwin' in plat:
-  print "MAC OS"
+  clear_dnsrecords()
+  from subprocess import Popen, PIPE
+  p = Popen(['dscacheutil', '-flushcache'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+  output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+  print "MAC OS", output, err
 elif 'linux' in plat:
   print "LINUX"
 
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=30)
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=40)
 
 # ------ ANALYSIS ------
 total_time = 0
@@ -113,6 +137,7 @@ for p in DNS_PAIRS:
   total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
 
 
+print ""
 print "Total of %d packets" % (packetCount)
 print "Total of %d pairs" % (len(DNS_PAIRS))
 print "Maximum response time %.3f ms" % (max_response_time(DNS_PAIRS))
@@ -120,17 +145,8 @@ print "Minimum response time %.3f ms" % (min_response_time(DNS_PAIRS))
 print "Time between first Q and last R %.3f ms" % (calculate_total_dnsload(DNS_PAIRS))
 print "Sum of QR time %.3f ms" % (total_time)
 print "Average of response time %.6f ms" % (total_time/(packetCount/2.0))
-print "Orfan packets: %d" % (len(DNS_DICT.keys()))
+print "Orfan queries: %d" % (len(DNS_DICT.keys()))
 
 
-
-
-
-
-
-
-
-
-
-
-
+# closing browser
+close_firefox()
