@@ -33,11 +33,17 @@ def calculate_total_dnsload(list_of_dnspairs):
   return diff_time_in_miliseconds(first_pair.time_q, last_pair.time_r)
 
 def clear_dnsrecords():
-  import psutil
-  for proc in psutil.process_iter():
-    if 'mDNSResponder' == proc.name():
-      proc.kill()
-  print "MATOU"
+  import psutil, platform
+  print "Cleaning DNS records"
+  plat = platform.platform().lower()
+  if 'darwin' in plat:
+    for proc in psutil.process_iter():
+      if 'mDNSResponder' == proc.name():
+        proc.kill()
+  
+  elif 'linux' in plat:
+    sys.exit("\nLINUX DNS CLEANING IS NOT YET IMPLEMENTED\n")
+  
 
 def close_firefox():
   import psutil
@@ -116,22 +122,9 @@ url = 'http://www.nu.nl'
 # Open URL in a new tab, if a browser window is already open.
 # webbrowser.get('firefox').open(url)
 webbrowser.get('firefox').open(url)
-# Open URL in new window, raising the window if possible.
-# webbrowser.open_new(url)
-import platform, psutil
+clear_dnsrecords()
 
-plat = platform.platform().lower()
-if 'darwin' in plat:
-  clear_dnsrecords()
-  from subprocess import Popen, PIPE
-  p = Popen(['dscacheutil', '-flushcache'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
-  output, err = p.communicate(b"input data that is passed to subprocess' stdin")
-  print "MAC OS", output, err
-
-elif 'linux' in plat:
-  print "LINUX" #FINISH
-
-packets = sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=5)
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
 
 # ------ ANALYSIS ------
 
@@ -140,7 +133,6 @@ total_time = 0
 for p in DNS_PAIRS:
   # print p
   total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
-
 
 print ""
 print "Total of %d packets" % (packetCount)
@@ -151,16 +143,17 @@ print "Time between first Q and last R %.3f ms" % (calculate_total_dnsload(DNS_P
 print "Sum of QR time %.3f ms" % (total_time)
 print "Average of response time %.6f ms" % (total_time/(packetCount/2.0))
 print "Orfan queries: %d" % (len(DNS_DICT.keys()))
-print len(safe_packets)
+if (len(safe_packets) == packetCount):
+  print "All the packets can be saved"
 
 from time import strftime, gmtime
 current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
 curated_url = url[url.find('.')+1:]
 file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
 
-print "SAVING PCAPD", file_name
+print "Saving pcap", file_name
 wrpcap(file_name, safe_packets)
-print "SAVED WITH SUCESS"
-print "CLOSING BROWSER"
+print "Saved with sucess"
+print "Closing browser"
 close_firefox()
-print "EXPERIMENT FINISHED"
+print "Experiment finished"
