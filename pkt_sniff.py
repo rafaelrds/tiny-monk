@@ -77,6 +77,7 @@ safe_packets = []
 # ------ SELECT/FILTER MSGS ------
 def select_DNS(pkt):
   global DNS_DICT, packetCount, safe_packets
+
   safe_packets.append(pkt)
   pkt_time = pkt.sprintf('%.time%')
   packetCount += 1
@@ -104,7 +105,6 @@ def select_DNS(pkt):
 
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
-      # print dns_pair_stamped # TO PRINT OR NOT TO PRINT!!!!!
 
   except:
     print "An exception was throwed!"
@@ -156,9 +156,11 @@ print len(safe_packets)
 from time import strftime, gmtime
 current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
 curated_url = url[url.find('.')+1:]
-file_name = "file.pcap" #% (curated_url + "_" + current_gmt_time)
-print file_name
+file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
+
+print "SAVING PCAPD", file_name
 wrpcap(file_name, safe_packets)
 print "SAVED WITH SUCESS"
-# closing browser
+print "CLOSING BROWSER"
 close_firefox()
+print "EXPERIMENT FINISHED"
