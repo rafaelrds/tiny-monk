@@ -3,6 +3,7 @@ from scapy.all import *
 import datetime, sys
 
 def diff_time_in_miliseconds(t1, t2):
+  DAY_MSECS = 24*60*60*int(1e6)
   t1 = datetime.datetime.strptime(t1, '%H:%M:%S.%f').time()
   t2 = datetime.datetime.strptime(t2, '%H:%M:%S.%f').time()
   h1, m1, s1, mm1 = t1.hour, t1.minute, t1.second, t1.microsecond
@@ -12,7 +13,7 @@ def diff_time_in_miliseconds(t1, t2):
   t1_msecs = (t1_secs * int(1e6)) + mm1
   t2_msecs = (t2_secs * int(1e6)) + mm2
   delta = t2_msecs - t1_msecs
-  return (delta)/1000.0 if delta > 0 else (24*60*60*int(1e6) + delta)/1000.0
+  return (delta)/1000.0 if delta > 0 else (DAY_MSECS + delta)/1000.0
 
 def max_response_time(list_of_dnspairs):
   max_rtime = 0.0
@@ -70,11 +71,13 @@ filter_bpf = 'udp and port 53'
 packetCount = 0
 DNS_DICT = {}
 DNS_PAIRS = []
+safe_packets = []
 
 
 # ------ SELECT/FILTER MSGS ------
 def select_DNS(pkt):
-  global DNS_DICT, packetCount
+  global DNS_DICT, packetCount, safe_packets
+  safe_packets.append(pkt)
   pkt_time = pkt.sprintf('%.time%')
   packetCount += 1
   if packetCount % 5 == 0:
@@ -115,8 +118,7 @@ url = 'http://www.nu.nl'
 webbrowser.get('firefox').open(url)
 # Open URL in new window, raising the window if possible.
 # webbrowser.open_new(url)
-import platform
-import psutil
+import platform, psutil
 
 plat = platform.platform().lower()
 if 'darwin' in plat:
@@ -125,13 +127,16 @@ if 'darwin' in plat:
   p = Popen(['dscacheutil', '-flushcache'], stdin=PIPE, stdout=PIPE, stderr=PIPE)
   output, err = p.communicate(b"input data that is passed to subprocess' stdin")
   print "MAC OS", output, err
-elif 'linux' in plat:
-  print "LINUX"
 
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=40)
+elif 'linux' in plat:
+  print "LINUX" #FINISH
+
+packets = sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=5)
 
 # ------ ANALYSIS ------
+
 total_time = 0
+
 for p in DNS_PAIRS:
   # print p
   total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
@@ -146,7 +151,14 @@ print "Time between first Q and last R %.3f ms" % (calculate_total_dnsload(DNS_P
 print "Sum of QR time %.3f ms" % (total_time)
 print "Average of response time %.6f ms" % (total_time/(packetCount/2.0))
 print "Orfan queries: %d" % (len(DNS_DICT.keys()))
+print len(safe_packets)
 
-
+from time import strftime, gmtime
+current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
+curated_url = url[url.find('.')+1:]
+file_name = "file.pcap" #% (curated_url + "_" + current_gmt_time)
+print file_name
+wrpcap(file_name, safe_packets)
+print "SAVED WITH SUCESS"
 # closing browser
 close_firefox()
