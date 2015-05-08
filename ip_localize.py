@@ -1,7 +1,3 @@
-''' TODO: EXTRACT A BINARY SEARCH METHOD AND USE IT TO SEARCH IN FILES '''
-
-
-
 '''
 Convert String IP to Integer according the below formula:
 (first octet * 256^3) + (second octet * 256^2) + (third octet * 256) + (fourth octet)
@@ -28,7 +24,7 @@ def get_external_ip(site="http://www.checkip.com"):
 	return address
 
 '''
-Retrieves line in the GeoLiteCity-Blocks.csv according to index
+Retrieves line in the GeoLiteCity-Blocks.csv according to file line index
 '''
 def get_GeoLiteBlockLine(index, my_file = 'GeoLite/GeoLiteCity-Blocks.csv'):
 	import linecache
@@ -137,19 +133,34 @@ def dig(site="www.example.com"):
 	return traces
 
 
-#Method testing/execution area:
-for i in xrange(256):
-	print str(i)+".x.x.x"
-	for j in xrange(256):
-		for k in xrange(256):
-			for l in xrange(256):
-				ip = "%d.%d.%d.%d" % (i, j, k, l)
-				get_IPAS(ip)
+# Method testing/execution area:
+# for i in xrange(256):
+# 	print str(i)+".x.x.x"
+# 	for j in xrange(256):
+# 		for k in xrange(256):
+# 			for l in xrange(256):
+# 				ip = "%d.%d.%d.%d" % (i, j, k, l)
+# 				get_IPAS(ip)
 
-# site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
-# traces = dig(site=site)
+site = "vitrines-inteligentes-1251445001.us-east-1.elb.amazonaws.com."
+traces = dig(site=site)
+for t in traces:
+	print t
+
+# my_ip = get_external_ip()
+# print get_GeoLiteLocation(my_ip)
 # for t in traces:
-	# print t
-# my_ips = ["54.76.117.96", "54.76.116.11", "200.215.195.1"]
-# for ip in my_ips:
-# 	print get_GeoLiteLocation(ip)
+	# print 
+
+# import time
+# times = []
+# a = time.clock()
+# my_ips = ["54.76.117.96", "54.76.116.11", "200.215.195.1"] * int(1e5) # 100.000
+# for i in xrange(10):
+# 	for ip in my_ips:
+# 		get_GeoLiteLocation(ip)
+# 		b = time.clock()
+# 	print i, ":D %.2f" % (b-a)
+# 	times.append(b-a)
+# 	a = b
+# print "avg %.3f" % (sum(times)/float(len(times)))
