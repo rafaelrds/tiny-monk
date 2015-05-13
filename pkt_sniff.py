@@ -194,6 +194,10 @@ def do_experiment(url):
 
   reset_global_vars()
 
-url_list = ['http://www.nytimes.com']
-do_experiment(url=url)
-print_global_vars()
+
+import time
+url_list = ['http://www.nytimes.com','http://www.youtube.com']
+for url in url_list:
+  do_experiment(url=url)
+  print_global_vars()
+  time.sleep(2)
