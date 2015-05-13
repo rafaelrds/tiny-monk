@@ -114,10 +114,67 @@ def select_DNS(pkt):
 
   except:
     print "An exception was throwed!"
+    sys.exit("\nAn exception was throwed! FIX IT UP BEFORE IT DESTROY EVERYTHING\n")
+
+def total_time_packets():
+  '''Calculate total time according to the 
+     global dictionary DNS_PAIRS'''
+  global DNS_PAIRS
+  total_time = 0
+  for p in DNS_PAIRS:
+    # print p
+    total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
+  return total_time
+
+def print_experiment_summary():
+  '''Print a small summary according to the global
+     variables'''
+  global packetCount, DNS_PAIRS, DNS_DICT, safe_packets
+  total_time = total_time_packets()
+  print "\nTotal of %d packets" % (packetCount)
+  print "Total of %d pairs" % (len(DNS_PAIRS))
+  print "Maximum response time %.3f ms" % (max_response_time(DNS_PAIRS))
+  print "Minimum response time %.3f ms" % (min_response_time(DNS_PAIRS))
+  print "Time between first Q and last R %.3f ms" % (calculate_total_dnsload(DNS_PAIRS))
+  print "Sum of QR time %.3f ms" % (total_time)
+  print "Average of response time %.6f ms" % (total_time/(packetCount/2.0))
+  print "Orfan queries: %d" % (len(DNS_DICT.keys()))
+  if (len(safe_packets) == packetCount):
+    print "All the packets can be saved"
+
+
+def save_packets(url):
+  from time import strftime, gmtime
+  current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
+  curated_url = url[url.find('.')+1:]
+  file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
+
+  print "Saving pcap", file_name
+  wrpcap(file_name, safe_packets)
+  print "Saved with success"
   
+def print_global_vars(count=True, dict_dns=True, pairs=False, s_packets=False):
+  if count:
+    print "packetCount:",packetCount
+  if dict_dns:
+    print "DNS_DICT:", DNS_DICT
+  if pairs:
+    print "DNS_PAIRS:", DNS_PAIRS
+  if s_packets:
+    print "safe_packets:", safe_packets
+
+def reset_global_vars():
+  global packetCount
+  global DNS_DICT, DNS_PAIRS, safe_packets
+  packetCount = 0
+  DNS_DICT = {}
+  DNS_PAIRS = []
+  safe_packets = []
+
+
 # ------ START SNIFFER ------
 import webbrowser
-url = 'http://www.nu.nl'
+url = 'http://www.amazon.de' #'http://www.nu.nl'
 
 # Open URL in a new tab, if a browser window is already open.
 # webbrowser.get('firefox').open(url)
@@ -127,33 +184,13 @@ clear_dnsrecords()
 sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
 
 # ------ ANALYSIS ------
+print_experiment_summary()
+save_packets(url)
 
-total_time = 0
-
-for p in DNS_PAIRS:
-  # print p
-  total_time += diff_time_in_miliseconds(p.time_q, p.time_r)
-
-print ""
-print "Total of %d packets" % (packetCount)
-print "Total of %d pairs" % (len(DNS_PAIRS))
-print "Maximum response time %.3f ms" % (max_response_time(DNS_PAIRS))
-print "Minimum response time %.3f ms" % (min_response_time(DNS_PAIRS))
-print "Time between first Q and last R %.3f ms" % (calculate_total_dnsload(DNS_PAIRS))
-print "Sum of QR time %.3f ms" % (total_time)
-print "Average of response time %.6f ms" % (total_time/(packetCount/2.0))
-print "Orfan queries: %d" % (len(DNS_DICT.keys()))
-if (len(safe_packets) == packetCount):
-  print "All the packets can be saved"
-
-from time import strftime, gmtime
-current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
-curated_url = url[url.find('.')+1:]
-file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
-
-print "Saving pcap", file_name
-wrpcap(file_name, safe_packets)
-print "Saved with sucess"
 print "Closing browser"
 close_firefox()
 print "Experiment finished"
+
+print_global_vars()
+reset_global_vars()
+print_global_vars()
