@@ -34,7 +34,6 @@ def calculate_total_dnsload(list_of_dnspairs):
 
 def clear_dnsrecords():
   import psutil, platform
-  print "Cleaning DNS records"
   plat = platform.platform().lower()
   if 'darwin' in plat:
     for proc in psutil.process_iter():
@@ -44,6 +43,9 @@ def clear_dnsrecords():
   elif 'linux' in plat:
     sys.exit("\nLINUX DNS CLEANING IS NOT YET IMPLEMENTED\n")
   
+def open_firefox(url=""):
+  import webbrowser
+  webbrowser.get('firefox').open(url)
 
 def close_firefox():
   import psutil
@@ -143,17 +145,15 @@ def print_experiment_summary():
     print "All the packets can be saved"
 
 
-def save_packets(url):
+def save_packets(name):
   from time import strftime, gmtime
   current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
   curated_url = url[url.find('.')+1:]
   file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
-
-  print "Saving pcap", file_name
   wrpcap(file_name, safe_packets)
-  print "Saved with success"
   
 def print_global_vars(count=True, dict_dns=True, pairs=False, s_packets=False):
+  print "GLOBAL VARIABLES"
   if count:
     print "packetCount:",packetCount
   if dict_dns:
@@ -172,25 +172,28 @@ def reset_global_vars():
   safe_packets = []
 
 
-# ------ START SNIFFER ------
-import webbrowser
-url = 'http://www.amazon.de' #'http://www.nu.nl'
+def do_experiment(url):
+  # ------ BROWSER + SNIFFING ------
+  open_firefox(url=url)
 
-# Open URL in a new tab, if a browser window is already open.
-# webbrowser.get('firefox').open(url)
-webbrowser.get('firefox').open(url)
-clear_dnsrecords()
+  print "Cleaning DNS records"
+  clear_dnsrecords()
 
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
+  sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
 
-# ------ ANALYSIS ------
-print_experiment_summary()
-save_packets(url)
+  # ------ ANALYSIS ------
+  print_experiment_summary()
 
-print "Closing browser"
-close_firefox()
-print "Experiment finished"
+  print "Saving pcap"
+  save_packets(name=url)
+  print "Saved with success"
 
-print_global_vars()
-reset_global_vars()
+  print "Closing browser"
+  close_firefox()
+  print "Experiment finished"
+
+  reset_global_vars()
+
+url_list = ['http://www.nytimes.com']
+do_experiment(url=url)
 print_global_vars()
