@@ -209,7 +209,7 @@ def do_experiment(url):
 
 import sys
 if sys.argv[1] == 'i':
-  interface = raw_input("What interface do you want to use?")
+  interface = raw_input("What interface do you want to use? ")
 clear_dnsrecords()
 sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
 
