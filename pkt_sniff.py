@@ -36,12 +36,18 @@ def clear_dnsrecords():
   import psutil, platform
   plat = platform.platform().lower()
   if 'darwin' in plat: #For Mac OS
-    for proc in psutil.process_iter():
-      if 'mDNSResponder' == proc.name():
-        proc.kill()
-  
+    proc_name = 'mDNSResponder'
+    print 'MAC OS DETECTED'
   elif 'linux' in plat:
-    sys.exit("\nLINUX DNS CLEANING IS NOT YET IMPLEMENTED\n")
+    proc_name = 'dnsmasq'
+    print 'LINUX OS DETECTED'
+  else:
+    sys.exit("\nDNS CLEANING ON THAT PLATAFORM IS NOT YET IMPLEMENTED\n")
+  
+  for proc in psutil.process_iter():
+    if proc_name == proc.name():
+      proc.kill()
+
 
 def open_firefox(url=""):
   import webbrowser
