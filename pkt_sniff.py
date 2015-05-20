@@ -35,14 +35,14 @@ def calculate_total_dnsload(list_of_dnspairs):
 def clear_dnsrecords():
   import psutil, platform
   plat = platform.platform().lower()
-  if 'darwin' in plat:
+  if 'darwin' in plat: #For Mac OS
     for proc in psutil.process_iter():
       if 'mDNSResponder' == proc.name():
         proc.kill()
   
   elif 'linux' in plat:
     sys.exit("\nLINUX DNS CLEANING IS NOT YET IMPLEMENTED\n")
-  
+
 def open_firefox(url=""):
   import webbrowser
   webbrowser.get('firefox').open(url)
@@ -110,7 +110,7 @@ def select_DNS(pkt):
       previous_pkt_time = DNS_DICT[dns_id][0]
       previous_pkt = DNS_DICT[dns_id][1]
       dns_pair_stamped = DNS_pair_stamped(previous_pkt_time, previous_pkt, pkt_time, pkt)
-
+      print dns_pair_stamped
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
 
@@ -151,6 +151,7 @@ def save_packets(name):
   curated_url = url[url.find('.')+1:]
   file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
   wrpcap(file_name, safe_packets)
+  return file_name
   
 def print_global_vars(count=True, dict_dns=True, pairs=False, s_packets=False):
   print "GLOBAL VARIABLES"
@@ -185,8 +186,7 @@ def do_experiment(url):
   print_experiment_summary()
 
   print "Saving pcap"
-  save_packets(name=url)
-  print "Saved with success"
+  print "Saved with success:", save_packets(name=url)
 
   print "Closing browser"
   close_firefox()
@@ -195,9 +195,14 @@ def do_experiment(url):
   reset_global_vars()
 
 
-import time
-url_list = ['http://www.nytimes.com','http://www.youtube.com']
-for url in url_list:
-  do_experiment(url=url)
-  print_global_vars()
-  time.sleep(2)
+# import time
+# url_list = ['http://plus.google.com','http://www.nytimes.com','http://www.youtube.com']
+# for url in url_list:
+#   do_experiment(url=url)
+#   time.sleep(2)
+clear_dnsrecords()
+sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
+
+
+
+
