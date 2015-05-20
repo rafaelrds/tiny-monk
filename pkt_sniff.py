@@ -116,12 +116,15 @@ def select_DNS(pkt):
       previous_pkt_time = DNS_DICT[dns_id][0]
       previous_pkt = DNS_DICT[dns_id][1]
       dns_pair_stamped = DNS_pair_stamped(previous_pkt_time, previous_pkt, pkt_time, pkt)
-      print dns_pair_stamped
+      # print dns_pair_stamped
       del(DNS_DICT[dns_id])
       DNS_PAIRS.append(dns_pair_stamped)
 
   except:
-    print "An exception was throwed!"
+    print "An exception was throwed! This was the last seen packet"
+    print dns_pair_stamped
+    print previous_pkt_time, pkt_time
+    pkt[DNS].summary()
     sys.exit("\nAn exception was throwed! FIX IT UP BEFORE IT DESTROY EVERYTHING\n")
 
 def total_time_packets():
@@ -154,7 +157,9 @@ def print_experiment_summary():
 def save_packets(name):
   from time import strftime, gmtime
   current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
-  curated_url = url[url.find('.')+1:]
+  curated_url = name.split('/')[2]
+  if curated_url[:3] == 'www':
+    curated_url = curated_url[4:]
   file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
   wrpcap(file_name, safe_packets)
   return file_name
@@ -179,20 +184,21 @@ def reset_global_vars():
   safe_packets = []
 
 
-def do_experiment(url):
+def do_experiment(website):
   # ------ BROWSER + SNIFFING ------
-  open_firefox(url=url)
+  experiment_timeout = 45
+  open_firefox(url=website)
 
   print "Cleaning DNS records"
   clear_dnsrecords()
-
-  sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
+  print "Starting sniffing. This experiment will take %d seconds" % (experiment_timeout)
+  sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=experiment_timeout)
 
   # ------ ANALYSIS ------
   print_experiment_summary()
 
   print "Saving pcap"
-  print "Saved with success:", save_packets(name=url)
+  print "Saved with success:", save_packets(name=website)
 
   print "Closing browser"
   close_firefox()
@@ -201,18 +207,29 @@ def do_experiment(url):
   reset_global_vars()
 
 
-# import time
 # url_list = ['http://plus.google.com','http://www.nytimes.com','http://www.youtube.com']
 # for url in url_list:
 #   do_experiment(url=url)
 #   time.sleep(2)
+# import time
+# import sys
+# with open(sys.argv[1], 'r') as my_file:
+#   for line in my_file.readlines():
+#     website = line.strip()
+#     do_experiment(website=website)
+#     time.sleep(2)
 
-import sys
-if sys.argv[1] == 'i':
-  interface = raw_input("What interface do you want to use? ")
-clear_dnsrecords()
-sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
+# import sys
+# if sys.argv[1] == 'i':
+#   interface = raw_input("What interface do you want to use
 
-
-
-
+with open(sys.argv[1], 'r') as my_file:
+  for line in my_file.readlines():
+    name = line.strip()
+    from time import strftime, gmtime
+    current_gmt_time = strftime("%d_%b_%Y_%H_%M_%S", gmtime())
+    curated_url = name.split('/')[2]
+    if curated_url[:3] == 'www':
+      curated_url = curated_url[4:]
+    file_name = "pcap/%s.pcap" % (curated_url + "_" + current_gmt_time)
+    print file_name
