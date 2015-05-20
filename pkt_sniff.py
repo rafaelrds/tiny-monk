@@ -206,6 +206,10 @@ def do_experiment(url):
 # for url in url_list:
 #   do_experiment(url=url)
 #   time.sleep(2)
+
+import sys
+if sys.argv[1] == 'i':
+  interface = raw_input("What interface do you want to use?")
 clear_dnsrecords()
 sniff(iface=interface, filter=filter_bpf, store=0,  prn=select_DNS, timeout=45)
 
