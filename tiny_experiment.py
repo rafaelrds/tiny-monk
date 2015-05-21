@@ -57,8 +57,7 @@ def clear_to_store(packets):
     del(p[UDP].len)
     del(p[UDP].chksum)
 
-def save_packets(name, packets):
-  file_name = pcap_filename(name)
+def save_packets(file_name, packets):
   clear_to_store(packets)
   wrpcap(file_name, packets)
 
@@ -78,22 +77,22 @@ def do_experiment(website):
   global experiment_number, experiment_timeout
   experiment_number += 1
   print "Starting Experiment #%d" % (experiment_number)
-  open_firefox(url=website)
-
   print "Cleaning DNS records"
   clear_dnsrecords()
   time.sleep(3) # wait for dns process to be reestablished
 
+  open_firefox(url=website)
   print "Starting to sniff at %s. This experiment will take %d seconds" % (website, experiment_timeout)
   packets = sniff(iface=interface, filter=filter_bpf, store=1, prn=dns_monitor_callback, timeout=experiment_timeout)
 
   print "Saving pcap"
-  save_packets(website, packets)
-  print "Saved with success:", pcap_filename(website)
+  file_name = pcap_filename(website)
+  save_packets(file_name, packets)
+  print "Saved with success at", file_name
 
   print "Closing browser"
   close_firefox()
-  print "Experiment #%d finished" % (experiment_number)
+  print "Experiment #%d finished\n" % (experiment_number)
 
   reset_global_vars()
   time.sleep(3) # wait for firefox process to be finished
