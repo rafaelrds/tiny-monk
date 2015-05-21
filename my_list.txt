@@ -19,7 +19,7 @@ http://www.haaretz.com
 http://www.icenews.is
 http://www.abc.net.au
 http://www.facebook.com
-plus.google.com
+http://plus.google.com
 http://www.twitter.com
 http://www.tumblr.com
 http://www.pinterest.com
