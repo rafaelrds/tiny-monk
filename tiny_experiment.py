@@ -79,7 +79,7 @@ def do_experiment(website):
   print "Starting Experiment #%d" % (experiment_number)
   print "Cleaning DNS records"
   clear_dnsrecords()
-  time.sleep(3) # wait for dns process to be reestablished
+  time.sleep(4) # wait for dns process to be reestablished
 
   open_firefox(url=website)
   print "Starting to sniff at %s. This experiment will take %d seconds" % (website, experiment_timeout)
@@ -99,12 +99,15 @@ def do_experiment(website):
 
 # Be aware to use sys arguments!
 def main():
-  with open(sys.argv[1], 'r') as my_file:
-    for line in my_file.readlines():
+  try:
+    with open(sys.argv[1], 'r') as my_file:
+      for line in my_file.readlines():
         url = line.strip()
         do_experiment(url)
 
-  print "Everything is finished"
+      print "Everything is finished"
+  except:
+    print "Provide proper arguments"
 
 if __name__ == "__main__":
   main()
