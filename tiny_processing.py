@@ -25,12 +25,12 @@ def get_type_list(type_website):
 	websites = []
 	with open('urls/'+type_website, 'r') as my_file:
 		for line in my_file.readlines():
-			website = filename_to_website(line.strip())[4:]
+			website = '.'.join(filename_to_website(line.strip()).split(".")[1:])
 			websites.append(website)
 	return websites
 
 #There shall be used for grouping
-socia_websites = get_type_list('social_list.txt')
+social_websites = get_type_list('social_list.txt')
 news_websites = get_type_list('news_list.txt')
 institutional_websites = get_type_list('institutional_list.txt')
 
@@ -64,15 +64,17 @@ for i, website in enumerate(d):
 	for f in d[website]:
 		packets = rdpcap(f)
 		website_to_packets[website].append(packets)
-	print website
+	print (i+1),
 	sys.stdout.flush(); 
 print "Everything is Loaded"
 
 
+del(website_to_packets['nu.nl'])
+
 group_frequency = defaultdict(list)
 for website in website_to_packets:
 	for pkt in website_to_packets[website]:
-		if website in socia_websites:
+		if website in social_websites:
 			group_frequency['social'].append(len(pkt))
 		elif website in news_websites:
 			group_frequency['news'].append(len(pkt))
@@ -85,15 +87,16 @@ for k in group_frequency:
 	group_frequency[k] = sum(pkt_size_arr) / float(len(pkt_size_arr))
 
 print group_frequency
+
 groups = group_frequency.keys()
 frequency = np.asarray(group_frequency.values())
 y_pos = np.arange(len(groups))
-plt.barh(y_pos, frequency, align='center')
+plt.barh(y_pos, frequency, align='center', alpha=0.4)
 plt.yticks(y_pos, groups)
-plt.xlabel('DNS Lookups by Website Type')
-plt.title('DNS Lookups according to website type')
+plt.xlabel('DNS Lookups')
+plt.title('How many DNS lookups common websites usually have?')
+plt.xlim((0,200))
 plt.show()
-
 
 
 
