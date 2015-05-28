@@ -124,6 +124,48 @@ def plot_in_out_grouping():
 	plt.title('How many DNS packets went IN/OUT?\nAt Institutional websites')
 	plt.show()
 
+def plot_frequency_cctld():
+	frequency_cctld = defaultdict(int)
+	acc = set(['com','edu','nl','net','local','org','br'])
+	for website in website_to_packets:
+		if website in institutional_websites:
+			for packets in website_to_packets[website]:
+				for pkt in packets:
+					if DNSRR not in pkt: #only answers
+						key = pkt[DNS].qd.qname.split('.')[-2]
+						if key in acc:
+							frequency_cctld[key] +=  1
+						else:
+							frequency_cctld['others'] += 1
+
+	groups = frequency_cctld.keys()
+	frequency = np.asarray(frequency_cctld.values())
+	x_pos = np.arange(len(groups))
+	colors = random_color_array(len(groups))
+	plt.bar(x_pos, frequency, align='center', alpha=0.4 ,color=colors)
+	plt.xticks(x_pos, groups)
+	plt.xlabel('DNS Lookups')
+	plt.title('What were the most frequent ccTLDs?\nInstitutional Websites')
+	plt.autoscale()
+	plt.show()
+
+def plot_frequency_countries():
+	groups, frequency = [], []
+	for k in sorted(c_frequency_country):
+		groups.append(k)
+		frequency.append(c_frequency_country[k])
+
+	groups = c_frequency_country.keys()
+	frequency = np.asarray(frequency)
+	x_pos = np.arange(len(groups))
+	colors = random_color_array(len(groups))
+	plt.bar(x_pos, frequency, align='center', alpha=0.4, width=0.3, color=colors)
+	plt.xticks(x_pos, groups)
+	plt.ylabel('DNS Lookups')
+	plt.title('Frequency of Countries on DNS Lookups?\nOverview')
+	plt.show()
+
+
 
 files = get_experiment_files()
 d = defaultdict(list)
@@ -131,42 +173,41 @@ for f in files:
 	key = filename_to_website(f)
 	d[key].append(f)
 
-website_to_packets = defaultdict(list)
-for i, website in enumerate(d):
-	for f in d[website]:
-		packets = rdpcap(f)
-		website_to_packets[website].append(packets)
-	print (i+1),
-	sys.stdout.flush(); 
+
+# website_to_packets = defaultdict(list)
+# for i, website in enumerate(d):
+# 	for f in d[website]:
+# 		packets = rdpcap(f)
+# 		website_to_packets[website].append(packets)
+# 	print (i+1),
+# 	sys.stdout.flush(); 
 print "Everything is Loaded"
 
 
+# i = 0
+# frequency_country = defaultdict(int)
+# from ip_localize import dig
+# for website in website_to_packets:
+# 	for packets in website_to_packets[website]:
+# 		for pkt in packets:
+# 			if DNSRR not in pkt: #queries only
+# 				i += 1
+# 				query = pkt[DNS].qd.qname
+# 				country = dig(site=query)[-1][-1][1][1:-1]
+# 				print i, country
+# 				frequency_country[country] += 1
 
-frequency_cctld = defaultdict(int)
+frequency_country = {'FR': 16, 'DK': 2, 'DE': 46, 'JP': 6, 'HU': 4, 'HK': 7, 'BR': 275, 'FI': 2, 'NL': 462, 'TW': 8, 'ID': 12, 'TH': 3, 'PH': 1, 'CA': 15, 'CH': 3, 'IS': 22, 'CZ': 1, 'AU': 5, 'GB': 17, 'EU': 118, 'IE': 4, 'SA': 1, 'ES': 75, 'UA': 1, 'US': 2130, 'SK': 1, 'KY': 1, 'SG': 10, 'SE': 1, 'IL': 23}
 
-acc = set(['com','edu','nl','net','local','org','br'])
-for website in website_to_packets:
-	for packets in website_to_packets[website]:
-		for pkt in packets:
-			if DNSRR not in pkt: #only answers
-				key = pkt[DNS].qd.qname.split('.')[-2]
-				if key in acc:
-					frequency_cctld[key] +=  1
-				else:
-					frequency_cctld['others'] += 1
 
-for i in frequency_cctld.items():
-	print i
 
-groups = frequency_cctld.keys()
-frequency = np.asarray(frequency_cctld.values())
-x_pos = np.arange(len(groups))
-colors = np.random.rand(len(groups))
-plt.bar(x_pos, frequency, align='center', alpha=0.4 ,color=colors)
-plt.xticks(x_pos, groups)
-plt.xlabel('DNS Lookups')
-plt.title('What were the most frequent ccTLDs?\nOverview')
-plt.show()
+
+
+
+
+
+
+
 
 
 
