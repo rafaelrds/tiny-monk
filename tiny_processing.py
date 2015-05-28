@@ -7,6 +7,20 @@ import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np
 import matplotlib.pyplot as plt
 
+def random_color_array(N, hexa=False):
+	if N > 150:
+		raise "The color dictionary only have 150 colors at the moment"
+	import matplotlib, numpy
+	colors = matplotlib.colors.cnames.items()
+	arr = []
+	for i in xrange(N):
+		r = numpy.random.randint(len(colors))
+		choice = colors[r][0] if not hexa else colors[r][1]
+		colors.pop(r)
+		arr.append(choice)
+	return arr
+
+
 def get_experiment_files():
 	import os
 	files = []
@@ -101,7 +115,6 @@ def plot_in_out_grouping():
 		frequency.append(group_in_out[k])
 
 	# groups = group_in_out.keys()
-	print groups
 	frequency = np.asarray(frequency)
 	y_pos = np.arange(len(groups))
 	colors = np.random.rand(len(groups))
@@ -129,10 +142,31 @@ print "Everything is Loaded"
 
 
 
+frequency_cctld = defaultdict(int)
 
+acc = set(['com','edu','nl','net','local','org','br'])
+for website in website_to_packets:
+	for packets in website_to_packets[website]:
+		for pkt in packets:
+			if DNSRR not in pkt: #only answers
+				key = pkt[DNS].qd.qname.split('.')[-2]
+				if key in acc:
+					frequency_cctld[key] +=  1
+				else:
+					frequency_cctld['others'] += 1
 
+for i in frequency_cctld.items():
+	print i
 
-
+groups = frequency_cctld.keys()
+frequency = np.asarray(frequency_cctld.values())
+x_pos = np.arange(len(groups))
+colors = np.random.rand(len(groups))
+plt.bar(x_pos, frequency, align='center', alpha=0.4 ,color=colors)
+plt.xticks(x_pos, groups)
+plt.xlabel('DNS Lookups')
+plt.title('What were the most frequent ccTLDs?\nOverview')
+plt.show()
 
 
 
