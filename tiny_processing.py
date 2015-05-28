@@ -52,8 +52,67 @@ def plot_packet_frequency_per_website():
 	plt.show()
 
 
-files = get_experiment_files()
+def plot_packet_frequency_groupingbtype():
+	group_frequency = defaultdict(list)
+	for website in website_to_packets:
+		for pkt in website_to_packets[website]:
+			if website in social_websites:
+				group_frequency['social'].append(len(pkt))
+			elif website in news_websites:
+				group_frequency['news'].append(len(pkt))
+			elif website in institutional_websites:
+				group_frequency['institutional'].append(len(pkt))
 
+
+	for k in group_frequency:
+		pkt_size_arr = group_frequency[k]
+		group_frequency[k] = sum(pkt_size_arr) / float(len(pkt_size_arr))
+
+	groups = group_frequency.keys()
+	frequency = np.asarray(group_frequency.values())
+	y_pos = np.arange(len(groups))
+	plt.barh(y_pos, frequency, align='center', alpha=0.4)
+	plt.yticks(y_pos, groups)
+	plt.xlabel('DNS Lookups')
+	plt.title('How many DNS lookups common websites usually have?')
+	plt.xlim((0,200))
+	plt.show()
+
+def plot_in_out_grouping():
+	group_in_out = defaultdict(int)
+	for website in website_to_packets:
+		if website in institutional_websites:
+			key = website
+		else:
+			continue
+		
+		for packets in website_to_packets[website]:
+			for pkt in packets:
+				if DNSRR in pkt: # response
+					group_in_out[key+"_"+'in'] += 1
+				else: # query 
+					group_in_out[key+"_"+'out'] += 1
+
+	print group_in_out
+
+	groups, frequency = [], []
+	for k in sorted(group_in_out):
+		groups.append(k)
+		frequency.append(group_in_out[k])
+
+	# groups = group_in_out.keys()
+	print groups
+	frequency = np.asarray(frequency)
+	y_pos = np.arange(len(groups))
+	colors = np.random.rand(len(groups))
+	plt.barh(y_pos, frequency, align='center', alpha=0.4, height=0.3)
+	plt.yticks(y_pos, groups)
+	plt.xlabel('DNS Lookups')
+	plt.title('How many DNS packets went IN/OUT?\nAt Institutional websites')
+	plt.show()
+
+
+files = get_experiment_files()
 d = defaultdict(list)
 for f in files:
 	key = filename_to_website(f)
@@ -69,34 +128,14 @@ for i, website in enumerate(d):
 print "Everything is Loaded"
 
 
-del(website_to_packets['nu.nl'])
-
-group_frequency = defaultdict(list)
-for website in website_to_packets:
-	for pkt in website_to_packets[website]:
-		if website in social_websites:
-			group_frequency['social'].append(len(pkt))
-		elif website in news_websites:
-			group_frequency['news'].append(len(pkt))
-		elif website in institutional_websites:
-			group_frequency['institutional'].append(len(pkt))
 
 
-for k in group_frequency:
-	pkt_size_arr = group_frequency[k]
-	group_frequency[k] = sum(pkt_size_arr) / float(len(pkt_size_arr))
 
-print group_frequency
 
-groups = group_frequency.keys()
-frequency = np.asarray(group_frequency.values())
-y_pos = np.arange(len(groups))
-plt.barh(y_pos, frequency, align='center', alpha=0.4)
-plt.yticks(y_pos, groups)
-plt.xlabel('DNS Lookups')
-plt.title('How many DNS lookups common websites usually have?')
-plt.xlim((0,200))
-plt.show()
+
+
+
+
 
 
 
