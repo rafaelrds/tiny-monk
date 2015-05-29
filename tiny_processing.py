@@ -165,6 +165,43 @@ def plot_frequency_countries():
 	plt.title('Frequency of Countries on DNS Lookups?\nOverview')
 	plt.show()
 
+def gather_packet_countries():
+	i = 0
+	frequency_country_social = defaultdict(int)
+	frequency_country_news = defaultdict(int)
+	frequency_country_institutional = defaultdict(int)
+	from ip_localize import dig
+	for website in website_to_packets:
+		if website in social_websites:
+			for packets in website_to_packets[website]:
+				for pkt in packets:
+					if DNSRR not in pkt: #queries only
+						i += 1
+						query = pkt[DNS].qd.qname
+						country = dig(site=query)[-1][-1][1][1:-1]
+						print i, country, website, "social"
+						frequency_country_social[country] += 1
+
+		
+		elif website in news_websites:
+			for packets in website_to_packets[website]:
+				for pkt in packets:
+					if DNSRR not in pkt: #queries only
+						i += 1
+						query = pkt[DNS].qd.qname
+						country = dig(site=query)[-1][-1][1][1:-1]
+						print i, country, website, "news"
+						frequency_country_news[country] += 1
+		
+		elif website in institutional_websites:
+			for packets in website_to_packets[website]:
+				for pkt in packets:
+					if DNSRR not in pkt: #queries only
+						i += 1
+						query = pkt[DNS].qd.qname
+						country = dig(site=query)[-1][-1][1][1:-1]
+						print i, country, website, "institutional"
+						frequency_country_institutional[country] += 1
 
 
 files = get_experiment_files()
@@ -174,45 +211,11 @@ for f in files:
 	d[key].append(f)
 
 
-# website_to_packets = defaultdict(list)
-# for i, website in enumerate(d):
-# 	for f in d[website]:
-# 		packets = rdpcap(f)
-# 		website_to_packets[website].append(packets)
-# 	print (i+1),
-# 	sys.stdout.flush(); 
+website_to_packets = defaultdict(list)
+for i, website in enumerate(d):
+	for f in d[website]:
+		packets = rdpcap(f)
+		website_to_packets[website].append(packets)
+	print (i+1),
+	sys.stdout.flush(); 
 print "Everything is Loaded"
-
-
-# i = 0
-# frequency_country = defaultdict(int)
-# from ip_localize import dig
-# for website in website_to_packets:
-# 	for packets in website_to_packets[website]:
-# 		for pkt in packets:
-# 			if DNSRR not in pkt: #queries only
-# 				i += 1
-# 				query = pkt[DNS].qd.qname
-# 				country = dig(site=query)[-1][-1][1][1:-1]
-# 				print i, country
-# 				frequency_country[country] += 1
-
-frequency_country = {'FR': 16, 'DK': 2, 'DE': 46, 'JP': 6, 'HU': 4, 'HK': 7, 'BR': 275, 'FI': 2, 'NL': 462, 'TW': 8, 'ID': 12, 'TH': 3, 'PH': 1, 'CA': 15, 'CH': 3, 'IS': 22, 'CZ': 1, 'AU': 5, 'GB': 17, 'EU': 118, 'IE': 4, 'SA': 1, 'ES': 75, 'UA': 1, 'US': 2130, 'SK': 1, 'KY': 1, 'SG': 10, 'SE': 1, 'IL': 23}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
