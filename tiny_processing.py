@@ -165,7 +165,7 @@ def plot_frequency_countries():
 	plt.title('Frequency of Countries on DNS Lookups?\nOverview')
 	plt.show()
 
-def gather_packet_countries():
+def gather_packet_countries_grouped():
 	i = 0
 	frequency_country_social = defaultdict(int)
 	frequency_country_news = defaultdict(int)
@@ -219,3 +219,23 @@ for i, website in enumerate(d):
 	print (i+1),
 	sys.stdout.flush(); 
 print "Everything is Loaded"
+
+
+
+frequency_country_social = {'NL': 11, 'TW': 1, 'CA': 1, 'DE': 3, 'JP': 2, 'US': 201, 'HK': 5, 'EU': 21, 'ES': 3}
+
+
+frequency_country_news = {'FR': 16, 'DK': 2, 'DE': 42, 'JP': 5, 'HU': 4, 'HK': 1, 'BR': 162, 'FI': 2, 'NL': 353, 
+						  'TW': 2, 'TH': 3, 'CA': 6, 'CH': 1, 'IS': 2, 'CZ': 1, 'AU': 4, 'GB': 11, 'EU': 81, 'IE': 7,
+						  'ID': 6, 'ES': 62, 'UA': 2, 'US': 1306, 'SK': 1, 'KY': 1, 'SG': 6, 'SE': 1, 'IL': 23}
+
+frequency_country_institutional = {'ES': 2, 'NL': 44, 'TW': 2, 'IS': 19, 'DE': 5, 'JP': 1, 'US': 479, 'SA': 1, 
+								  'HK': 2, 'GB': 3, 'BR': 111, 'EU': 15, 'PH': 1, 'ID': 10, 'IE': 2, 'CA': 7, 'SE': 1}
+
+
+
+
+
+
+
+
