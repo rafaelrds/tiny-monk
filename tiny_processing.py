@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt; plt.rcdefaults()
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def random_color_array(N, hexa=False):
 	if N > 150:
 		raise "The color dictionary only have 150 colors at the moment"
@@ -30,6 +31,7 @@ def get_experiment_files():
 	        files.append((os.path.join(dirname, filename)))
 	return files
 
+
 import re
 pattern = re.compile(r'\/([a-z.]+)')
 def filename_to_website(file_name):
@@ -38,9 +40,10 @@ def filename_to_website(file_name):
 def get_type_list(type_website):
 	websites = []
 	with open('urls/'+type_website, 'r') as my_file:
-		for line in my_file.readlines():
-			website = '.'.join(filename_to_website(line.strip()).split(".")[1:])
-			websites.append(website)
+		for w in my_file.readlines():
+			ws = w[7:].split('/')[0].split('.')
+			wc = '.'.join(ws[1:]) if ws[0] == 'www' else '.'.join(ws)
+			websites.append(wc.strip())
 	return websites
 
 #There shall be used for grouping
@@ -53,8 +56,7 @@ def plot_packet_frequency_per_website():
 	### Count packet frequency per website
 	pkt_frequency = defaultdict(int)
 	for website in website_to_packets:
-		website_packets = website_to_packets[website]
-		pkt_frequency[website] = (sum(len(pkt) for pkt in website_packets)/ float(len(website_packets)))
+		pkt_frequency[website] = (sum(len(pkt) for pkt in website_to_packets[website])/ float(len(website_to_packets[website])))
 
 	websites = pkt_frequency.keys()
 	frequency = np.asarray(pkt_frequency.values())
@@ -65,10 +67,42 @@ def plot_packet_frequency_per_website():
 	plt.title('How many DNS lookups common websites usually have?')
 	plt.show()
 
+def plot_sucessful_dns_per_website():
+	### Count packet frequency per websites
+	pkt_succesful = defaultdict(list)
+	successfulness = {}
+	for website in website_to_packets:
+		for packets in website_to_packets[website]:
+			for pkt in packets:
+				key = pkt[DNS].id
+				if DNSRR not in pkt:
+					successfulness[key] = 0
+				else:
+					successfulness[key] = 1
+			pkt_succesful[website].append( successfulness.values().count(1) ) #count occurrences of 1
+			successfulness = {}
+
+	web_succesful = defaultdict(int)
+	for website in pkt_succesful:
+		key = website
+		web_succesful[key] = sum(pkt_succesful[website]) / float(len(pkt_succesful[website]))
+
+	print web_succesful
+
+	websites = web_succesful.keys()
+	frequency = np.asarray(web_succesful.values())
+	y_pos = np.arange(len(websites))
+	plt.barh(y_pos, frequency, align='center')
+	plt.yticks(y_pos, websites)
+	plt.xlabel('DNS Lookups')
+	plt.title('How many succesful DNS lookups does commons websites have?')
+	plt.autoscale()
+	plt.show()
 
 def plot_packet_frequency_groupingbtype():
 	group_frequency = defaultdict(list)
 	for website in website_to_packets:
+
 		for pkt in website_to_packets[website]:
 			if website in social_websites:
 				group_frequency['social'].append(len(pkt))
@@ -77,28 +111,38 @@ def plot_packet_frequency_groupingbtype():
 			elif website in institutional_websites:
 				group_frequency['institutional'].append(len(pkt))
 
-
 	for k in group_frequency:
 		pkt_size_arr = group_frequency[k]
 		group_frequency[k] = sum(pkt_size_arr) / float(len(pkt_size_arr))
 
-	groups = group_frequency.keys()
-	frequency = np.asarray(group_frequency.values())
+	import operator
+	groups, frequency = [], []
+	for i in sorted(group_frequency.items(), key=operator.itemgetter(1)):
+		print i
+		groups.append(i[0])
+		frequency.append(i[1])
+
+	frequency = np.asarray(frequency)
+	print groups, frequency
 	y_pos = np.arange(len(groups))
 	plt.barh(y_pos, frequency, align='center', alpha=0.4)
 	plt.yticks(y_pos, groups)
-	plt.xlabel('DNS Lookups')
-	plt.title('How many DNS lookups common websites usually have?')
-	plt.xlim((0,200))
+	plt.xlabel('DNS packets')
+	plt.title('How many DNS packets common websites usually have?')
+	plt.xlim(0,250)
+	# plt.autoscale()
 	plt.show()
+
 
 def plot_in_out_grouping():
 	group_in_out = defaultdict(int)
 	for website in website_to_packets:
 		if website in institutional_websites:
-			key = website
-		else:
-			continue
+			key = 'institutional'
+		elif website in social_websites:
+			key = 'social'
+		elif website in news_websites:
+			key = 'news'
 		
 		for packets in website_to_packets[website]:
 			for pkt in packets:
@@ -117,12 +161,13 @@ def plot_in_out_grouping():
 	# groups = group_in_out.keys()
 	frequency = np.asarray(frequency)
 	y_pos = np.arange(len(groups))
-	colors = np.random.rand(len(groups))
-	plt.barh(y_pos, frequency, align='center', alpha=0.4, height=0.3)
+	colors = ['#23814c', '#812358'] * (len(frequency)//2)
+	plt.barh(y_pos, frequency, align='center', alpha=0.7, height=0.3, color=colors)
 	plt.yticks(y_pos, groups)
-	plt.xlabel('DNS Lookups')
-	plt.title('How many DNS packets went IN/OUT?\nAt Institutional websites')
+	plt.xlabel('DNS Packets')
+	plt.title('How many DNS packets went IN/OUT?')
 	plt.show()
+
 
 def plot_frequency_cctld():
 	frequency_cctld = defaultdict(int)
@@ -149,6 +194,7 @@ def plot_frequency_cctld():
 	plt.autoscale()
 	plt.show()
 
+
 def plot_frequency_countries():
 	groups, frequency = [], []
 	for k in sorted(c_frequency_country):
@@ -164,6 +210,7 @@ def plot_frequency_countries():
 	plt.ylabel('DNS Lookups')
 	plt.title('Frequency of Countries on DNS Lookups?\nOverview')
 	plt.show()
+
 
 def plot_country_grouping():
 	c_frequency_country = defaultdict(int)
@@ -227,7 +274,6 @@ def gather_packet_countries_grouped():
 						print i, country, website, "institutional"
 						frequency_country_institutional[country] += 1
 
-
 files = get_experiment_files()
 d = defaultdict(list)
 for f in files:
@@ -237,12 +283,35 @@ for f in files:
 
 website_to_packets = defaultdict(list)
 for i, website in enumerate(d):
+	if website in institutional_websites:
+		print website, website in institutional_websites
+	
 	for f in d[website]:
 		packets = rdpcap(f)
 		website_to_packets[website].append(packets)
-	print (i+1),
+	# print (i+1),
 	sys.stdout.flush(); 
 print "Everything is Loaded"
+
+
+
+# for website in website_to_packets:
+# 	for packets in website_to_packets[website]:
+# 		for pkt in packets:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
