@@ -1,0 +1,13 @@
+#!/bin/bash
+
+ip_address=`wget http://ipinfo.io/ip -qO -`
+while read line
+do
+        date=`date -u +%H%M_%d_%m_%y`
+        website="$( echo "$line" | sed -e 's#^http://##;' )"
+        timeout=$1
+        file_capture=$ip_address'-'$date'-'$website.pcap
+	echo $website 
+        #sudo timeout $timeout tcpdump -i eth0 'port 53' -w "$file_name" & sudo timeout $timeout xvfb-run firefox $line & wait
+        echo -e "$line captured.\n"
+done

@@ -1,0 +1,7 @@
+#!/bin/bash
+data=`date -u +%d_%m_%y`
+file_name=websites_$data.txt
+sudo python top_alexa.py $1 > $file_name
+
+sudo ./capture $2 < $file_name
+
