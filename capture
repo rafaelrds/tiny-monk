@@ -8,6 +8,6 @@ do
         timeout=$1
         file_capture=$ip_address'-'$date'-'$website.pcap
 	echo $website 
-        #sudo timeout $timeout tcpdump -i eth0 'port 53' -w "$file_name" & sudo timeout $timeout xvfb-run firefox $line & wait
+        sudo timeout $timeout tcpdump -i eth0 'port 53' -w "$file_capture" & sudo python enjoy.py $website $timeout & wait
         echo -e "$line captured.\n"
 done
