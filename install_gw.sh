@@ -3,6 +3,8 @@ sudo yum install -y vim xorg-x11-server-Xvfb.i686  libXrender-0.9.6-1.fc14.i686 
 sudo yum install -y xorg-x11*
 sudo yum install -y bind-utils
 
+sudo yum install -y git-all
+
 curl "https://bootstrap.pypa.io/get-pip.py" -o "get-pip.py"
 sudo python get-pip.py
 sudo pip install beautifulsoup4 pyvirtualdisplay selenium
