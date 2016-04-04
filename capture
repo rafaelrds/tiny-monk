@@ -4,10 +4,10 @@ ip_address=`wget http://ipinfo.io/ip -qO -`
 while read line
 do
         date=`date -u +%H%M_%d_%m_%y`
-        website="$( echo "$line" | sed -e 's#^http://##;' )"
+        website="$( echo "$line" | sed -e 's#^http://www.##;' )"
         timeout=$1
         file_capture=$ip_address'-'$date'-'$website.pcap
-	echo $website 
-        sudo timeout $timeout tcpdump -i eth0 'port 53' -w "$file_capture" & sudo python enjoy.py $website $timeout & wait
+	echo "$website starting capture" 
+        sudo timeout $timeout tcpdump -i eth0 'port 53' -w "captures/$file_capture" & sudo python enjoy.py $line $timeout & wait
         echo -e "$line captured.\n"
 done
