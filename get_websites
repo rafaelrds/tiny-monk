@@ -1,6 +1,6 @@
 #!/bin/bash
 data=`date -u +%d_%m_%y`
-websites_rank=websites_$data.txt
+websites_rank=websites_rank/websites_$data.txt
 sudo python top_alexa.py $1 > $websites_rank
 
 sudo ./capture $2 < $websites_rank 
